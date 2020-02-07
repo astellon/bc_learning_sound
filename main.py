@@ -8,6 +8,9 @@ import sys
 import os
 import chainer
 
+from chainer import serializers
+import chainer.links as L
+
 import opts
 import models
 import dataset
@@ -23,7 +26,14 @@ def main():
 
 
 def train(opt, split):
-    model = getattr(models, opt.netType)(opt.nClasses)
+    if opt.resume is not None:
+        model = getattr(models, opt.netType)(opt.resume_nclasses)
+        serializers.load_npz(opt.resume, model)
+        if opt.resume_nclasses != opt.nClasses:
+            model.fc7 = L.Linear(4096, opt.nClasses)
+    else:
+        model = getattr(models, opt.netType)(opt.nClasses)
+
     model.to_gpu()
     optimizer = chainer.optimizers.NesterovAG(lr=opt.LR, momentum=opt.momentum)
     optimizer.setup(model)

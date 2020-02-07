@@ -6,13 +6,16 @@ def parse():
     parser = argparse.ArgumentParser(description='BC learning for sounds')
 
     # General settings
-    parser.add_argument('--dataset', required=True, choices=['esc10', 'esc50', 'urbansound8k'])
+    parser.add_argument('--dataset', required=True, choices=['esc10', 'esc50', 'urbansound8k', 'noises'])
     parser.add_argument('--netType', required=True, choices=['envnet', 'envnetv2'])
     parser.add_argument('--data', required=True, help='Path to dataset')
     parser.add_argument('--split', type=int, default=-1, help='esc: 1-5, urbansound: 1-10 (-1: run on all splits)')
     parser.add_argument('--save', default='None', help='Directory to save the results')
     parser.add_argument('--testOnly', action='store_true')
     parser.add_argument('--gpu', type=int, default=0)
+
+    parser.add_argument('--resume', type=str, default=None, help='Path to saved model')
+    parser.add_argument('--resume_nclasses', type=int, default=-1, help='The number of classes when the saved model was traind')
 
     # Learning settings (default settings are defined below)
     parser.add_argument('--BC', action='store_true', help='BC learning')
@@ -37,6 +40,9 @@ def parse():
     elif opt.dataset == 'esc10':
         opt.nClasses = 10
         opt.nFolds = 5
+    elif opt.dataset == 'noises':
+        opt.nClasses = 5
+        opt.nFolds = 5
     else:  # urbansound8k
         opt.nClasses = 10
         opt.nFolds = 10
@@ -56,6 +62,10 @@ def parse():
 
     # Default settings (nEpochs will be doubled if opt.BC)
     default_settings = dict()
+    default_settings['noises'] = {
+        'envnet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
+        'envnetv2': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10}
+    }
     default_settings['esc50'] = {
         'envnet': {'nEpochs': 600, 'LR': 0.01, 'schedule': [0.5, 0.75], 'warmup': 0},
         'envnetv2': {'nEpochs': 1000, 'LR': 0.1, 'schedule': [0.3, 0.6, 0.9], 'warmup': 10}
@@ -76,6 +86,9 @@ def parse():
 
     if opt.save != 'None' and not os.path.isdir(opt.save):
         os.makedirs(opt.save)
+
+    if opt.resume_nclasses == -1:
+        opt.resume_nclasses = opt.nClasses
 
     display_info(opt)
 
