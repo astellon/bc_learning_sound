@@ -6,3 +6,14 @@ __pycache__/
 
 ### PyCharm ###
 \.idea/
+
+# binary
+*.wav
+*.npy
+*npz
+
+# dataset (too large)
+dataset_gen/data
+
+# job scripts (include student id)
+job
